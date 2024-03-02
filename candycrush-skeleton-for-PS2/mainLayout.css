@@ -1,0 +1,91 @@
+/* Copyright (c) 2017 MIT 6.813/6.831 course staff, all rights reserved.
+ * Redistribution of original or derived work requires permission of course staff.
+ */
+
+ body {
+	margin: auto;
+	vertical-align: middle;
+	font-weight: bold;
+	text-align: center;
+ 	height: 100vh;
+}
+
+.disp-left  {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#gameBoard table {
+	width: 320px;
+	height: 320px;
+}
+#gameBoard table td{
+	border: 1px solid white;
+}
+#Column-3 {
+	display: flex;
+    flex-direction: column;
+    align-items: center;
+	gap: 40px;
+}
+
+#arrowContainer {
+	width: fit-content;
+	background:white;
+	color:blue;
+	
+}
+.arrow {
+	width: 70px;
+	height: 50px;
+}
+.arrow:hover {
+	/* background-color: #0275d8 !important; */
+	border-color: green !important;
+	cursor: pointer;
+}
+.arrow:disabled {
+	cursor: not-allowed;
+}
+
+
+.arrow.btn-primary{
+	background-color: green;
+	border-color: green;
+}
+.btn-primary:disabled {
+	border-color: gray ;
+	background-color: gray ;
+}
+
+.Crush{
+	background-color: gray !important;
+}
+
+.candy-input {
+    display: flex;
+	align-items: center;
+	gap: 20px;
+	width: fit-content;
+}
+.candy-input input {
+	width: 70px;
+	
+}
+
+ .game-name {
+	font-weight: bold;
+	color: red;
+}
+
+#Column-1, #Column-2, #Column-3 {
+	margin: auto;
+	padding: 10px;
+	align-items: center;
+    justify-content: center;
+    display: flex;
+}
+.btn.disabled {
+	background-color: gray;
+}

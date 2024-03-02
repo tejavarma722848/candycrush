@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<!--
+/* Copyright (c) 2017 MIT 6.813/6.831 course staff, all rights reserved.
+ * Redistribution of original or derived work requires permission of course staff.
+ */
+-->
+<!-- I have not discussed this assignment with anyone else -->
+<head>
+</head> 
+
+<meta charset="utf-8">
+<title>CandyCrush</title>
+
+<!-- Load style sheets -->
+<link rel="stylesheet" href=
+  "https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.css">
+
+<link rel="stylesheet" href="mainLayout.css">
+
+<!-- Use mobile-aware viewport -->
+<meta name="viewport" content=  "width=device-width, initial-scale=1, shrink-to-fit=no">
+
+<!-- Load any supplemental Javascript libraries here -->
+<script src=
+  "https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src=
+  "https://cdnjs.cloudflare.com/ajax/libs/seedrandom/2.4.2/seedrandom.js">
+</script>
+<script src="candy.js"></script>
+<script src="board.js"></script>
+<script src="rules.js"></script>
+
+<script>
+
+// By default, the first board loaded by your page will be the same 
+// each time you load (which is accomplished by "seeding" the random
+// number generator. This makes testing (and grading!) easier!
+Math.seedrandom(0);
+
+
+// A short jQuery extension to read query parameters from the URL.
+$.extend({
+  getUrlVars: function() {
+    var vars = [], pair;
+    var pairs = window.location.search.substr(1).split('&');
+    for (var i = 0; i < pairs.length; i++) {
+      pair = pairs[i].split('=');
+      vars.push(pair[0]);
+      vars[pair[0]] = pair[1] &&
+          decodeURIComponent(pair[1].replace(/\+/g, ' '));
+    }
+    return vars;
+  },
+  getUrlVar: function(name) {
+    return $.getUrlVars()[name];
+  }
+});
+
+// constants
+var DEFAULT_BOARD_SIZE = 8;
+
+// data model at global scope for easier debugging
+var board;
+var rules;
+
+// initialize board
+if ($.getUrlVar('size') && $.getUrlVar('size') >= 3) {
+  board = new Board($.getUrlVar('size'));
+} else {
+  board = new Board(DEFAULT_BOARD_SIZE);
+}
+
+// load a rule
+rules = new Rules(board);
+
+rules.prepareNewGame();
+
+// Final initialization entry point: the Javascript code inside this block
+// runs at the end of start-up when the page has finished loading.
+$(document).ready(function()
+{
+    const game = newBoard();
+    $('#gameBoard').append(game);
+
+    $("#arrow-right , #arrow-left, #arrow-up, #arrow-down").click(function(e) {
+      let input = $("#moveInput").val();
+      $("#moveInput").val('');
+      let col = input.slice(0,1).charCodeAt(0)-97;
+      let row = Number(input.slice(1,))-1;
+      let fromCandy = board.getCandyAt(row, col);
+      let toCandy;
+      if (rules.getCandyCrushes().length==0)
+      {
+      if(e.target.id == "arrow-up") {
+        toCandy = board.getCandyAt(row-1, col)
+      } else if(e.target.id == "arrow-down") {
+        toCandy = board.getCandyAt(row+1, col)
+      } else if(e.target.id == "arrow-right") {
+        toCandy = board.getCandyAt(row, col+1)
+      } else {
+        toCandy = board.getCandyAt(row, col-1)
+      }
+
+      board.flipCandies(fromCandy, toCandy);
+      document.getElementById("moveInput").focus();
+      disableArrows();
+    }});
+
+    $("#moveInput").on('input', function(e) {
+      disableArrows();
+      let input = e.target.value;
+
+      if(input.length < 2) { return }
+      // remove above line
+      // validate input using regex
+
+
+      let col = input.slice(0,1).charCodeAt(0)-97;
+      let row = Number(input.slice(1,))-1;
+      let candy = board.getCandyAt(row, col);
+      if (rules.getCandyCrushes().length==0)
+      {
+      if(rules.isMoveTypeValid(candy, "up")) {
+        $('#arrow-up').attr('disabled', false);
+      }
+      if(rules.isMoveTypeValid(candy, "left")) {
+        $('#arrow-left').attr('disabled', false);
+      }
+      if(rules.isMoveTypeValid(candy, "down")) {
+        $('#arrow-down').attr('disabled', false);
+      }
+      if(rules.isMoveTypeValid(candy, "right")) {
+        $('#arrow-right').attr('disabled', false);
+      }
+    }});
+
+    function disableArrows() {
+      $('#arrow-up').attr('disabled', true)
+      $('#arrow-down').attr('disabled', true)
+      $('#arrow-right').attr('disabled', true)
+      $('#arrow-left').attr('disabled', true)
+    }
+
+    $("#crush").on('click', function() {
+      const crushes = rules.getCandyCrushes(); 
+      rules.removeCrushes([crushes[crushes.length - 1]]);
+
+  
+      $('#gameBoard').empty()
+      $('#gameBoard').append(newBoard());
+
+      $("#crush").attr('disabled', true);
+      
+      setTimeout(() => {
+        rules.moveCandiesDown();
+      }, 500)
+  
+    });
+});
+
+function newBoard() {
+  var out = "<table>"
+  var row = ""
+  const alpha = Array.from(Array(board.boardSize)).map((e, i) => i + 97);
+  const alphabet = alpha.map((x) => String.fromCharCode(x));
+  for(i=0;i<board.boardSize;i++){
+    row += "<tr>"
+    for(j=0;j<board.boardSize;j++){
+      if(board.square[i][j] == 'yellow') {
+        row +=  '<td style="background-color:' + board.square[i][j] +  '; color: black;">' + alphabet[j] + (i+1)  + '</td>' ;
+      } else {
+        row +=  '<td style="background-color:' + board.square[i][j] +  '; color: white;">' + alphabet[j] + (i+1)  + '</td>' ;
+      }
+    }
+    row += "</tr>"
+  }   
+  out += row + "</table>"
+  disableCrushButton();
+  return out;
+}
+
+
+/* Event Handlers */
+// access the candy object with info.candy
+
+// add a candy to the board
+$(board).on('add', function(e, info)
+{
+  // Your code here.
+  $('#gameBoard').empty()
+  $('#gameBoard').append(newBoard());
+  disableCrushButton();
+});
+
+// move a candy on the board
+$(board).on('move', function(e, info)
+{
+  // Your code here.
+  $('#gameBoard').empty();
+  $('#gameBoard').append(newBoard());
+  disableCrushButton();
+});
+
+// remove a candy from the board
+$(board).on('remove', function(e, info)
+{
+  // Your code here.
+});
+
+// move a candy on the board
+$(board).on('scoreUpdate', function(e, info)
+{
+  // Your code here. To be implemented in pset 2.
+});
+
+// Button Events
+$(document).on('click', "#buttonIDhere", function(evt)
+{
+  
+});
+
+// keyboard events arrive here
+$(document).on('keydown', function(evt) {
+  // Your code here. 
+});
+
+function generateNewGame(){
+  board.clear();
+  rules.prepareNewGame();
+  append.newBoard();
+} 
+
+
+function disableCrushButton(){
+  var crush=rules.getCandyCrushes();
+  if(crush.length>0){
+    $("#crush").attr('disabled', false);
+  } else {
+    $("#crush").attr('disabled', true);
+  }
+}
+
+
+</script>
+
+
+</head>
+
+<body>
+
+<div class="" style="height: 100%">
+  <div class="row" style="height: 100%;">
+    <div class="col-md-3 disp-left" id="Column-1">
+      <h3 id="score"> </h3>
+      <h1 id="gameTitle" class="game-name">Candy <br> Crush</h1>
+      <input class="btn btn-primary " type="button" id="newGame" value="New Game" onclick="generateNewGame()">
+    </div>
+   
+
+  <div class="col-md-6" id="Column-2">
+
+    <div id="gameBoard" style="border:1">
+    </div>
+
+  </div>
+
+  <div class="col-md-3" id="Column-3">
+    <div class="candy-input">
+        Move: <input class="form-control" type="text" id="moveInput" value="" pattern="^[a-hA-H][1-8]">
+    </div>
+    <div class=""  id="arrowContainer">
+      <table>
+        <tr>
+          <td></td>
+          <td><input class="btn btn-primary arrow" id="arrow-up" type="button"  value="&#8593"disabled></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><input class="btn btn-primary arrow" id="arrow-left" type="button"  value="&#8592"  disabled></td>
+          <td></td>
+          <td><input class="btn btn-primary arrow" id="arrow-right" type="button" value="&#8594"  disabled></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td><input class="btn btn-primary arrow" id="arrow-down" type="button"  value="&#8595"   disabled></td>
+          <td></td>
+        </tr>
+      </table>
+    </div>
+    <div class="">
+      <input class="btn btn-primary" type="button" id="crush" value="Crush Once">
+    </div>
+  </div>
+      
+    </div> <!-- class="row" -->
+  </div> <!-- class="container" -->
+
+
+</body>
+
+</html>
